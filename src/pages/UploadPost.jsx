@@ -34,6 +34,25 @@ export default function UploadPost({ user, functionUrl, onPostCreated }) {
     }
   }, [file])
 
+  function handleFileChange(e) {
+    const chosen = e.target.files?.[0]
+    if (!chosen) {
+      setFile(null)
+      setPreview(null)
+      return
+    }
+    const maxSize = 256 * 1024 // 256 KB
+    if (chosen.size > maxSize) {
+      setStatus('Please select an image under 256 KB.')
+      e.target.value = ''
+      setFile(null)
+      setPreview(null)
+      return
+    }
+    setStatus('')
+    setFile(chosen)
+  }
+
   async function handleUpload(e) {
     e.preventDefault()
     if (!file) return setStatus('Please choose an image first')
@@ -160,13 +179,13 @@ export default function UploadPost({ user, functionUrl, onPostCreated }) {
               <div className="upload-icon">📸</div>
               <div className="upload-text">
                 <span className="upload-text-main">Click to upload image</span>
-                <span className="upload-text-sub">or drag and drop</span>
+                <span className="upload-text-sub">or drag and drop (max 256 KB)</span>
               </div>
               <input
                 id="post-image-input"
                 type="file"
                 accept="image/*"
-                onChange={e => setFile(e.target.files[0])}
+                onChange={handleFileChange}
                 className="file-input"
                 disabled={loading}
               />

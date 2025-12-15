@@ -216,6 +216,15 @@
   color: var(--primary);
 }
 
+.feed-action-btn.danger {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--error);
+}
+.feed-action-btn.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--error);
+}
+
 .action-count {
   background: var(--primary);
   color: white;

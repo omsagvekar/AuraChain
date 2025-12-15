@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import FeedPostCard from './FeedPostCard'
+import EditProfileModal from './EditProfileModal'
 import './ProfilePage.css'
 
 export default function ProfilePage({ user, currentUserId, profileId = null }) {
   const [profile, setProfile] = useState(null)
   const [userPosts, setUserPosts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editProfileOpen, setEditProfileOpen] = useState(false)
   const isOwnProfile = !profileId || profileId === currentUserId
   const targetUserId = profileId || currentUserId
 
@@ -78,10 +80,12 @@ export default function ProfilePage({ user, currentUserId, profileId = null }) {
   const auraFromPosts = userPosts.filter(p => p.verdict === 'approved').length * 5 // +5 per approved post
   // Note: Boost/comment/share breakdown would require additional queries
 
-  // TODO: Implement edit profile functionality
   function handleEditProfile() {
-    console.log('Edit profile clicked')
-    // Future: Open edit profile modal or navigate to edit page
+    setEditProfileOpen(true)
+  }
+
+  async function handleProfileUpdated() {
+    await fetchProfile(targetUserId)
   }
 
   return (
@@ -162,11 +166,21 @@ export default function ProfilePage({ user, currentUserId, profileId = null }) {
                 key={post.id} 
                 post={post} 
                 currentUserId={currentUserId} 
+                  onProfileClick={() => {}} 
               />
             ))}
           </div>
         )}
       </div>
+
+      {isOwnProfile && (
+        <EditProfileModal
+          isOpen={editProfileOpen}
+          onClose={() => setEditProfileOpen(false)}
+          profile={{ ...profile, id: targetUserId }}
+          onUpdated={handleProfileUpdated}
+        />
+      )}
     </div>
   )
 }

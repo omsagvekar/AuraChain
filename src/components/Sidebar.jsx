@@ -14,7 +14,7 @@ export default function Sidebar({ user, profile, totalAuraPoints, currentView, o
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1 className="sidebar-logo gradient-text">✨ Aura</h1>
+        <h1 className="sidebar-logo gradient-text">✨ Bandhilki</h1>
         <p className="sidebar-tagline">Share your good deeds</p>
       </div>
 

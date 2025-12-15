@@ -2,16 +2,19 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { boostPost, unboostPost, sharePost, getPostEngagement } from '../lib/auraService'
+import EditPostModal from './EditPostModal'
 import CommentModal from './CommentModal'
 import './FeedPostCard.css'
 
-export default function FeedPostCard({ post, currentUserId, onEngagementChange }) {
+export default function FeedPostCard({ post, currentUserId, onEngagementChange, onProfileClick }) {
   const [imageUrl, setImageUrl] = useState(null)
   const [loading, setLoading] = useState(true)
   const [imageError, setImageError] = useState(false)
   const [engagement, setEngagement] = useState({ boosts: 0, comments: 0, shares: 0, hasBoosted: false })
   const [boosting, setBoosting] = useState(false)
   const [commentModalOpen, setCommentModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const profile = post.profiles || {}
 
   useEffect(() => {
@@ -73,6 +76,23 @@ export default function FeedPostCard({ post, currentUserId, onEngagementChange }
     } catch (error) {
       setImageError(true)
       setLoading(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm('Delete this post? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', post.id)
+      if (error) {
+        alert(error.message || 'Failed to delete post')
+      } else {
+        if (onEngagementChange) onEngagementChange()
+      }
+    } catch (err) {
+      alert('Failed to delete post')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -198,7 +218,10 @@ export default function FeedPostCard({ post, currentUserId, onEngagementChange }
       <article className={`feed-post-card ${isOwnPost ? 'own-post' : ''}`}>
         <div className="feed-post-header">
           <div className="feed-post-author">
-            <div className="feed-author-avatar">
+            <div
+              className="feed-author-avatar clickable"
+              onClick={() => onProfileClick && onProfileClick(post.user_id)}
+            >
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt={displayName} />
               ) : (
@@ -208,7 +231,12 @@ export default function FeedPostCard({ post, currentUserId, onEngagementChange }
               )}
             </div>
             <div className="feed-author-info">
-              <div className="feed-author-name">{displayName}</div>
+              <div
+                className="feed-author-name clickable"
+                onClick={() => onProfileClick && onProfileClick(post.user_id)}
+              >
+                {displayName}
+              </div>
               <div className="feed-post-date">{formatDate(post.created_at)}</div>
             </div>
           </div>
@@ -296,6 +324,27 @@ export default function FeedPostCard({ post, currentUserId, onEngagementChange }
                 <span className="action-count">{engagement.shares}</span>
               )}
             </button>
+            {isOwnPost && (
+              <>
+                <button 
+                  className="feed-action-btn"
+                  onClick={() => setEditModalOpen(true)}
+                  title="Edit post"
+                >
+                  <span className="action-icon">✏️</span>
+                  <span className="action-label">Edit</span>
+                </button>
+                <button 
+                  className="feed-action-btn danger"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  title="Delete post"
+                >
+                  <span className="action-icon">🗑️</span>
+                  <span className="action-label">Delete</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </article>
@@ -306,6 +355,17 @@ export default function FeedPostCard({ post, currentUserId, onEngagementChange }
         post={post}
         currentUserId={currentUserId}
         onCommentAdded={handleCommentAdded}
+      />
+
+      <EditPostModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        post={post}
+        onPostUpdated={() => {
+          setEditModalOpen(false)
+          loadEngagement()
+          if (onEngagementChange) onEngagementChange()
+        }}
       />
     </>
   )

@@ -1,96 +1,70 @@
 // src/components/ExplorePage.jsx
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import FeedPostCard from './FeedPostCard'
 import './ExplorePage.css'
 
-export default function ExplorePage({ currentUserId }) {
-  const [posts, setPosts] = useState([])
+export default function ExplorePage({ currentUserId, onProfileSelect }) {
+  const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filter, setFilter] = useState('all') // all, verified, high-aura, recent
+  const [filter, setFilter] = useState('all') // all, high-aura, recent
 
   useEffect(() => {
-    fetchExplorePosts()
+    fetchProfiles()
   }, [filter])
 
-  async function fetchExplorePosts() {
+  async function fetchProfiles() {
     setLoading(true)
     try {
       let query = supabase
-        .from('posts')
-        .select(`
-          *,
-          profiles (
-            id,
-            display_name,
-            avatar_url
-          )
-        `)
+        .from('profiles')
+        .select('id, display_name, avatar_url, bio, aura_score, created_at')
+        .limit(60)
 
-      // Apply filters (UI only - actual filtering can be added later)
-      if (filter === 'verified') {
-        query = query.eq('verdict', 'approved')
-      } else if (filter === 'high-aura') {
-        query = query.gt('aura_points', 10)
+      if (filter === 'high-aura') {
+        query = query.order('aura_score', { ascending: false })
+      } else if (filter === 'recent') {
+        query = query.order('created_at', { ascending: false })
+      } else {
+        query = query.order('aura_score', { ascending: false })
       }
-      // 'recent' and 'all' use default ordering
-
-      query = query.order('created_at', { ascending: false }).limit(50)
 
       const { data, error } = await query
-
       if (error) {
-        console.error('Error fetching explore posts:', error)
-        // Fallback to simple fetch
-        const { data: postsData } = await supabase
-          .from('posts')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50)
-        
-        if (postsData) {
-          setPosts(postsData)
-        }
+        console.error('Error fetching profiles:', error)
       } else if (data) {
-        setPosts(data)
+        setProfiles(data)
       }
     } catch (error) {
-      console.error('Error in fetchExplorePosts:', error)
+      console.error('Error in fetchProfiles:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  // TODO: Implement search functionality
   function handleSearch(e) {
     e.preventDefault()
     setSearchQuery(e.target.value)
-    // Future: Filter posts by search query
-    console.log('Search query:', e.target.value)
   }
 
-  // Filter posts by search query (client-side for now)
-  const filteredPosts = posts.filter(post => {
+  const filteredProfiles = profiles.filter(p => {
     if (!searchQuery) return true
-    const query = searchQuery.toLowerCase()
-    const caption = (post.caption || '').toLowerCase()
-    const displayName = (post.profiles?.display_name || '').toLowerCase()
-    return caption.includes(query) || displayName.includes(query)
+    const q = searchQuery.toLowerCase()
+    return (p.display_name || '').toLowerCase().includes(q) || (p.bio || '').toLowerCase().includes(q)
   })
 
   return (
     <div className="explore-page">
       <div className="explore-header">
-        <h2 className="explore-title">Explore</h2>
-        <p className="explore-subtitle">Discover good deeds from the community</p>
+        <h2 className="explore-title">Explore Profiles</h2>
+        <p className="explore-subtitle">Find inspiring people and their aura journeys</p>
       </div>
 
       <div className="explore-controls">
         <form className="explore-search" onSubmit={(e) => e.preventDefault()}>
           <input
             type="text"
-            placeholder="Search by username or caption..."
+            placeholder="Search by username or bio..."
             value={searchQuery}
             onChange={handleSearch}
             className="search-input"
@@ -106,12 +80,6 @@ export default function ExplorePage({ currentUserId }) {
             onClick={() => setFilter('all')}
           >
             All
-          </button>
-          <button
-            className={`filter-btn ${filter === 'verified' ? 'active' : ''}`}
-            onClick={() => setFilter('verified')}
-          >
-            ✓ Verified
           </button>
           <button
             className={`filter-btn ${filter === 'high-aura' ? 'active' : ''}`}
@@ -131,26 +99,41 @@ export default function ExplorePage({ currentUserId }) {
       {loading ? (
         <div className="explore-loading">
           <div className="loading-spinner"></div>
-          <p>Loading posts...</p>
+          <p>Loading profiles...</p>
         </div>
-      ) : filteredPosts.length === 0 ? (
+      ) : filteredProfiles.length === 0 ? (
         <div className="explore-empty">
           <div className="empty-icon">🔍</div>
-          <h3>No posts found</h3>
+          <h3>No profiles found</h3>
           <p>
             {searchQuery 
-              ? `No posts match "${searchQuery}"` 
-              : 'No posts available yet'}
+              ? `No profiles match "${searchQuery}"` 
+              : 'No profiles available yet'}
           </p>
         </div>
       ) : (
-        <div className="explore-posts">
-          {filteredPosts.map(post => (
-            <FeedPostCard 
-              key={post.id} 
-              post={post} 
-              currentUserId={currentUserId} 
-            />
+        <div className="explore-profiles-grid">
+          {filteredProfiles.map(profile => (
+            <div
+              key={profile.id}
+              className="profile-card"
+              onClick={() => onProfileSelect && onProfileSelect(profile.id)}
+            >
+              <div className="profile-card-avatar">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt={profile.display_name || 'User'} />
+                ) : (
+                  <div className="avatar-placeholder-small">
+                    {(profile.display_name || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="profile-card-info">
+                <div className="profile-card-name">{profile.display_name || 'User'}</div>
+                <div className="profile-card-aura">✨ {profile.aura_score || 0} Aura</div>
+                {profile.bio && <p className="profile-card-bio">{profile.bio}</p>}
+              </div>
+            </div>
           ))}
         </div>
       )}

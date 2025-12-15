@@ -14,6 +14,7 @@ export default function Dashboard({ user }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [currentView, setCurrentView] = useState('home')
+  const [selectedProfileId, setSelectedProfileId] = useState(null)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const functionUrl = import.meta.env.VITE_PROCESS_IMAGE_URL
 
@@ -113,6 +114,15 @@ export default function Dashboard({ user }) {
 
   function handleViewChange(view) {
     setCurrentView(view)
+    if (view === 'profile') {
+      // default to own profile when opening profile view directly
+      setSelectedProfileId(null)
+    }
+  }
+
+  function handleOpenProfile(profileId) {
+    setSelectedProfileId(profileId === user.id ? null : profileId)
+    setCurrentView('profile')
   }
 
   function handleUploadClick() {
@@ -127,12 +137,20 @@ export default function Dashboard({ user }) {
   function renderMainContent() {
     switch (currentView) {
       case 'explore':
-        return <ExplorePage currentUserId={user.id} />
+        return <ExplorePage currentUserId={user.id} onProfileSelect={handleOpenProfile} />
       case 'profile':
-        return <ProfilePage user={user} currentUserId={user.id} />
+        return <ProfilePage user={user} currentUserId={user.id} profileId={selectedProfileId} />
       case 'home':
       default:
-        return <HomeFeed posts={posts} currentUserId={user.id} loading={loading} />
+        return (
+          <HomeFeed
+            posts={posts}
+            currentUserId={user.id}
+            loading={loading}
+            onProfileSelect={handleOpenProfile}
+            onRefreshPosts={fetchPosts}
+          />
+        )
     }
   }
 

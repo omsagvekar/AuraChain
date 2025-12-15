@@ -3,7 +3,7 @@ import React from 'react'
 import FeedPostCard from './FeedPostCard'
 import './HomeFeed.css'
 
-export default function HomeFeed({ posts, currentUserId, loading }) {
+export default function HomeFeed({ posts, currentUserId, loading, onProfileSelect, onRefreshPosts }) {
   if (loading) {
     return (
       <div className="home-feed">
@@ -41,10 +41,8 @@ export default function HomeFeed({ posts, currentUserId, loading }) {
             key={post.id} 
             post={post} 
             currentUserId={currentUserId}
-            onEngagementChange={() => {
-              // Optional: Refresh feed when engagement changes
-              // This can be passed from parent component if needed
-            }}
+            onProfileClick={onProfileSelect}
+            onEngagementChange={onRefreshPosts}
           />
         ))}
       </div>

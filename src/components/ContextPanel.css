@@ -4,9 +4,9 @@
   flex-direction: column;
   gap: 1.5rem;
   position: sticky;
-  top: 100px;
+  top: 90px;
   height: fit-content;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 140px);
   overflow-y: auto;
 }
 
@@ -176,7 +176,16 @@
 
 @media (max-width: 1200px) {
   .context-panel {
-    display: none;
+    position: static;
+    width: 100%;
+    max-height: none;
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .context-panel {
+    width: 100%;
   }
 }
 
