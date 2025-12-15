@@ -1,0 +1,53 @@
+# Node/Vite/React core ignores
+node_modules/
+dist/
+build/
+.env
+.env.*
+*.local
+
+# Supabase config/secrets
+db/.env
+supabase/.env
+supabase/.temp
+supabase/migrations/.history
+supabase/functions/.env
+.supabase/
+
+# VSCode/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.log
+
+# System
+.DS_Store
+Thumbs.db
+
+# Cursor/Editor config and state
+.cursor/
+
+# OS junk files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Output/coverage (if any)
+coverage/
+*.coverage
+
+# Custom: Aura confidential
+# Ignore project-specific API config/scripts and any files marked as confidential
+AURA_SYSTEM_SCHEMA.md
+AURA_SYSTEM_IMPLEMENTATION.md
+AURA_SYSTEM_SUMMARY.md
+DATABASE_CHANGES.md
+QUICK_SETUP.md
+
+# Prevent pushing secrets accidentally
+*.key
+*.pem
+*.crt
+*.p12
