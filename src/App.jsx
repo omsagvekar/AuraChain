@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard.jsx' // optional, create minimal if mis
 
 export default function App() {
   const [user, setUser] = useState(null)
+  const [isSignUp, setIsSignUp] = useState(true)
 
   useEffect(() => {
     // get session on load
@@ -40,8 +41,8 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="auth-page">
-        <div className="auth-content">
+      <div className="auth-center-outer">
+        <div className="auth-center-inner">
           <div className="auth-hero">
             <h1 className="gradient-text">Welcome to Aura</h1>
             <p className="auth-hero-subtitle">
@@ -49,8 +50,14 @@ export default function App() {
             </p>
           </div>
           <div className="auth-forms">
-            <SignUp />
-            <Login />
+            {isSignUp ? <SignUp /> : <Login />}
+            <div className="auth-toggle">
+              {isSignUp ? (
+                <p>Already have an account? <button onClick={() => setIsSignUp(false)}>Log in</button></p>
+              ) : (
+                <p>Don't have an account? <button onClick={() => setIsSignUp(true)}>Sign up</button></p>
+              )}
+            </div>
           </div>
         </div>
       </div>
